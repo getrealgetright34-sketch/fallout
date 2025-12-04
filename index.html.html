@@ -17,7 +17,14 @@
         }
 
         body {
-            background-color: var(--bg-color);
+            background:
+            /* 主背景色 */
+            var(--bg-color)
+            /* 叠加一张低透明度的废土风格纹理图 */
+            url('https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExZjcwbXNiOGdjNTdqaXJrejZiMXVmYnN1aTZrdGxjZWw2aGk3eWtzaiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/7mxip0pDorPZjJRxUd/giphy.gif');
+            background-blend-mode: overlay; /* 混合模式让纹理融合更好 */
+            background-size: cover;
+            background-attachment: fixed; /* 纹理固定，滚动时不动 */
             color: var(--term-green);
             font-family: var(--font-main);
             margin: 0;
@@ -84,25 +91,114 @@
             overflow-y: auto;
         }
 
-        .part-card {
+            /* 新增：零件箱拖拽悬停高亮 */
+            #parts-bin.drag-active {
+                border: 2px dashed var(--term-amber) !important;
+                background-color: rgba(255, 184, 51, 0.05) !important;
+                box-shadow: inset 0 0 20px rgba(255, 184, 51, 0.2) !important;
+            }        
+            
+            .part-card {
             background: #000;
             border: 1px dashed var(--term-green);
             padding: 10px;
             margin-bottom: 10px;
             cursor: grab;
-            transition: all 0.2s;
+            transition: all 0.3s;
+            position: relative;
         }
 
-        .part-card:hover {
-            border-style: solid;
-            box-shadow: 0 0 8px var(--term-green);
-            background: #0f1f0f;
+        /* 给装配槽内的零件添加一个放入动画 */
+        .slot .part-card {
+            animation: dropIn 0.3s ease-out;
         }
 
-        .part-card:active {
-            cursor: grabbing;
+        @keyframes dropIn {
+            0% {
+                transform: scale(0.8);
+                opacity: 0.5;
+            }
+
+            60% {
+                transform: scale(1.05);
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
         }
 
+            .part-card:hover {
+                border-style: solid;
+                box-shadow: 0 0 12px var(--term-green);
+                background: #0f1f0f;
+                transform: translateY(-3px);
+            }
+
+            .part-card:active {
+                cursor: grabbing;
+                transform: translateY(0);
+            }
+
+            /* 添加零件被选中时的效果 */
+            .part-card.in-slot {
+                border: 2px solid var(--term-amber);
+                background: rgba(255, 184, 51, 0.1);
+                box-shadow: 0 0 15px rgba(255, 184, 51, 0.5);
+            }
+
+        /* === 新增：按钮控制栏样式 === */
+        .screen-controls {
+            position: absolute; /* 绝对定位 */
+            top: 10px; /* 距离顶部10像素 */
+            right: 10px; /* 距离右边10像素 */
+            z-index: 100; /* 最高层级，确保在最上层 */
+            display: flex; /* 水平排列按钮 */
+            gap: 8px; /* 按钮间距 */
+        }
+
+        .control-btn {
+            background-color: rgba(0, 30, 0, 0.8); /* 半透明深绿背景 */
+            color: var(--term-green);
+            border: 1px solid var(--term-green);
+            font-family: var(--font-main);
+            font-size: 0.8em;
+            padding: 6px 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 3px;
+            text-transform: uppercase; /* 大写字母 */
+            letter-spacing: 1px;
+        }
+
+            .control-btn:hover {
+                background-color: var(--term-green);
+                color: #000;
+                box-shadow: 0 0 10px rgba(51, 255, 51, 0.5);
+            }
+
+            .control-btn:active {
+                transform: scale(0.95);
+            }
+
+        /* === 新增：针对整个页面全屏的优化样式 === */
+        :fullscreen {
+            background-color: var(--bg-color) !important; /* 确保背景色统一 */
+            padding: 20px !important; /* 保持内边距 */
+        }
+
+        /* 浏览器前缀兼容 */
+        :-webkit-full-screen {
+            background-color: var(--bg-color) !important;
+            padding: 20px !important;
+        }
+
+        :-moz-full-screen {
+            background-color: var(--bg-color) !important;
+            padding: 20px !important;
+        }        
+        
         .card-title { font-weight: bold; font-size: 0.9em; }
         .card-meta { 
             font-size: 0.75em; 
@@ -122,16 +218,18 @@
         }
 
         .preview-screen {
-            width: 90%;
-            height: 70%;
-            border: 3px solid var(--term-green); /* 加粗边框更醒目 */
+            width: 100%; /* 改为100%填满容器 */
+            height: 70vh; /* 使用视窗高度单位，更灵活 */
+            max-height: 500px; /* 最大高度限制 */
+            min-height: 300px; /* 最小高度保证 */
+            border: 3px solid var(--term-green);
             margin-bottom: 20px;
             position: relative;
             background-color: #000;
-            background-size: cover; /* 关键：让背景图覆盖整个区域 */
-            background-position: center; /* 关键：居中显示 */
-            background-repeat: no-repeat; /* 关键：不重复 */
-            box-shadow: 0 0 20px rgba(51, 255, 51, 0.4); /* 增强发光效果 */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            box-shadow: 0 0 20px rgba(51, 255, 51, 0.4);
             overflow: hidden;
         }
 
@@ -304,6 +402,19 @@
         <div class="panel" id="preview-panel">
             <div class="panel-header">Simulated Preview</div>
             <div class="preview-screen">
+                <!-- 按钮控制栏 - 新添加的部分 -->
+                <div class="screen-controls">
+                    <button class="control-btn" id="fullscreen-btn" title="全屏显示">
+                        ⛶ FULLSCREEN
+                    </button>
+                    <button class="control-btn" id="exit-fullscreen-btn" title="退出全屏" style="display: none;">
+                        ⬌ EXIT
+                    </button>
+                    <button class="control-btn" id="reset-btn" title="重置所有装配">
+                        ↺ REDO
+                    </button>
+                </div>
+
                 <!-- 图片容器 - 放在最底层 -->
                 <div class="mod-icon" id="preview-icon">
                     <!-- 图片会通过JS动态插入到这里 -->
@@ -375,45 +486,76 @@
             { user: "LeviathanAxe", text: "DOWNLOADING NOW. MY BODY IS READY." }
         ];
 
-        // 《辐射》主题图片智能匹配规则
-        const imageRules = [
-            // 规则1：三个标签 -> 终极改造
-            { tags: ['Visual', 'Gameplay', 'Audio'], image: 'https://staticdelivery.nexusmods.com/mods/1151/images/87983/87983-1762273475-216944672.png' },
-            
-            // 规则2：两个特定标签的组合 -> 混合类型
-            { tags: ['Visual', 'Gameplay'], image: 'https://staticdelivery.nexusmods.com/mods/1151/images/87983/87983-1762273363-1800887534.png' },
-            { tags: ['Visual', 'Audio'], image: 'https://staticdelivery.nexusmods.com/mods/1151/images/9048-0-1481700060.gif' },
-            { tags: ['Gameplay', 'Audio'], image: 'https://staticdelivery.nexusmods.com/mods/1151/images/9048-3-1478385814.gif' },
-            
-            // 规则3：单个标签 -> 基础类型
-            { tags: ['Visual'], image: 'https://staticdelivery.nexusmods.com/mods/1151/images/55817/55817-1639155045-23612675.jpeg' },
-            { tags: ['Gameplay'], image: 'https://staticdelivery.nexusmods.com/mods/1151/images/27479-0-1508690249.gif' },
-            { tags: ['Audio'], image: 'https://staticdelivery.nexusmods.com/mods/1151/images/9048-3-1458633384.gif' }
-        ];
+// 《辐射》主题图片智能匹配规则 - 升级为支持随机图片池
+const imageRules = [
+    // 规则1：三个标签 -> 终极改造 (现在有3张图可以随机)
+    { 
+        tags: ['Visual', 'Gameplay', 'Audio'], 
+        images: [
+            'https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExNDZvMTRkNXV5NDVoNWdnd3gyM2VxcngwMmhmZHJ6aHNxbWM0bDEzdiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/mBv1pDl2EvnviBAj5S/giphy.gif',
+            'https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExOXl1dTBqOGNlZWZ5NWoxeGx4bHZ5cnR3Z3l6aDl2a2lqc2JlcXdxdCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/l0MYC0LajbaPoEADu/giphy.gif',
+            'https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExeGxmbHRqNGh3OW5scnE2anZ2OHJodGw1a3BmZ2N4bTZ6YjJ6cjBiNSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3o7TKsQ8gTp3WqXqjq/giphy.gif',
+            'https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExcmF5YXc0b2JrZmNhNGh4dmtlNWRmam12amJwYzJ5ODBtdmY4ZDJweSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/DAFTzKpcBNRVgADMyX/giphy.gif'
+        ] 
+    },
+    
+    // 规则2：两个特定标签的组合 -> 混合类型
+    { 
+        tags: ['Visual', 'Gameplay'], 
+        images: [
+            'https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExOTdtY3g4NnNvaXl3eGJjOWprN294azUwZGw3aXpybTl0dWV4ZGRudCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/UrsNCpba5y3NBf54G9/giphy.gif',
+            'https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExZmV4OWVmdzhhbXEydGJ2dGh6dG1pZ2EwNHJ4MjRqdTN1N3M1ZyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3o7TKsQ8gTp3WqXqjq/giphy.gif',
+            'https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExaWVlOW9zbzRzem91bndqb3ZpbWJ1MHA4ZTl4dXVrZ2I1dmNnN2U2cSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/s2Hu61Z9CujrPoIVun/giphy.gif'
+        ] 
+    },
+    { 
+        tags: ['Visual', 'Audio'], 
+        image: 'https://staticdelivery.nexusmods.com/mods/1151/images/9048-0-1481700060.gif' 
+        // 注意：这条规则仍然使用旧的单张图片格式，说明新旧格式可以并存
+    },
+    { 
+        tags: ['Gameplay', 'Audio'], 
+        image: 'https://staticdelivery.nexusmods.com/mods/1151/images/9048-3-1478385814.gif' 
+    },
+    
+    // 规则3：单个标签 -> 基础类型
+    { 
+        tags: ['Visual'], 
+        images: [
+            'https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExczdlMXZ4ZnpqeHZnM21yZWV0b2VraWU2ZTR0cjdqejRnamZodTc1YiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/35NEOu8KD38MPeggGA/giphy.gif',
+            'https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExeGM5aDl0M2JmZ2Jqem8zZ2Z6eG5hbWY5a2VhZzN6ZzZ6ZzZ6ZzZ6ZyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/l0MYC0LajbaPoEADu/giphy.gif'
+        ]
+    },
+    { tags: ['Gameplay'], image: 'https://staticdelivery.nexusmods.com/mods/1151/images/27479-0-1508690249.gif' },
+    { tags: ['Audio'], image: 'https://staticdelivery.nexusmods.com/mods/1151/images/9048-3-1458633384.gif' }
+];
         // 默认图片
-        const defaultImage = 'https://upload.wikimedia.org/wikipedia/commons/e/ee/Fallout_television_series_logo.svg';
-        // 智能图片匹配函数
-        function findImageForTags(tagArray) {
-            const sortedTags = [...tagArray].sort();
-            
-            // 1. 尝试匹配精确组合（适用于所有规则）
-            for (let rule of imageRules) {
-                if (JSON.stringify(sortedTags) === JSON.stringify([...rule.tags].sort())) {
-                    return rule.image;
-                }
+        const defaultImage = 'https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExejh1M2Z2ZDR2MTBsMWZpcWt6bG90aWNsbmkwNHJkZHR0ang5b2EzOSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/CWcebXJhflE64/giphy.gif';
+// 智能图片匹配函数 - 升级为支持随机选择
+function findImageForTags(tagArray) {
+    const sortedTags = [...tagArray].sort();
+    
+    // 1. 尝试匹配精确组合
+    for (let rule of imageRules) {
+        if (JSON.stringify(sortedTags) === JSON.stringify([...rule.tags].sort())) {
+            // *** 修改点：优先检查是否有图片池（images），有则随机选一张 ***
+            if (rule.images && Array.isArray(rule.images) && rule.images.length > 0) {
+                const randomIndex = Math.floor(Math.random() * rule.images.length);
+                console.log(`匹配组合 ${sortedTags}，从 ${rule.images.length} 张图中随机选择第 ${randomIndex + 1} 张`);
+                return rule.images[randomIndex];
+            } 
+            // *** 如果没有图片池但有单张图（image），则沿用旧逻辑 ***
+            else if (rule.image) {
+                console.log(`匹配组合 ${sortedTags}，使用单张图片`);
+                return rule.image;
             }
-            
-            // 2. 如果未精确匹配，降级匹配：尝试用当前组合去匹配规则中的子集（此逻辑可根据需要开启）
-            // for (let rule of imageRules) {
-            //     // 检查当前标签是否包含规则中的所有标签（例如，['Visual','Gameplay'] 是 ['Visual','Gameplay','Audio'] 的子集）
-            //     if (rule.tags.every(tag => sortedTags.includes(tag))) {
-            //         return rule.image;
-            //     }
-            // }
-            
-            // 3. 都没有匹配上，使用默认图片
-            return defaultImage;
         }
+    }
+    
+    // 2. 都没有匹配上，使用默认图片
+    console.log(`未匹配任何组合，使用默认图片`);
+    return defaultImage;
+}
 
         let currentResources = 5;
         const maxResources = 5;
@@ -445,12 +587,17 @@
         };
 
         /* --- DRAG AND DROP LOGIC --- */
-        function allowDrop(ev) {
-            ev.preventDefault();
-            if(ev.target.classList.contains('slot')) {
-                ev.target.classList.add('drag-over');
-            }
-        }
+function allowDrop(ev) {
+    ev.preventDefault();
+    const targetId = ev.target.id || ev.target.parentNode.id;
+    // 当拖拽到零件箱或装配槽时，添加高亮类
+    if(targetId === 'parts-bin') {
+        document.getElementById('parts-bin').classList.add('drag-active');
+    }
+    if(ev.target.classList.contains('slot')) {
+        ev.target.classList.add('drag-over');
+    }
+}
 
         document.addEventListener('dragleave', (ev) => {
             if(ev.target.classList.contains('slot')) {
@@ -458,41 +605,56 @@
             }
         });
 
-        function drag(ev) {
-            ev.dataTransfer.setData("text", ev.target.id);
-            ev.dataTransfer.setData("origin", ev.target.parentNode.id);
-        }
+function drag(ev) {
+    ev.dataTransfer.setData("text", ev.target.id);
+    ev.dataTransfer.setData("origin", ev.target.parentNode.id);
+    // 开始拖拽时就让零件箱高亮，提示可以放回
+    document.getElementById('parts-bin').classList.add('drag-active');
+}
 
-        function drop(ev) {
-            ev.preventDefault();
-            const data = ev.dataTransfer.getData("text");
-            const originId = ev.dataTransfer.getData("origin");
-            const element = document.getElementById(data);
-            const cost = parseInt(element.dataset.cost);
-            
-            let target = ev.target;
-            while (!target.classList.contains('slot') && target.id !== 'parts-bin' && target.tagName !== 'BODY') {
-                target = target.parentNode;
+function drop(ev) {
+    ev.preventDefault();
+    const data = ev.dataTransfer.getData("text");
+    const originId = ev.dataTransfer.getData("origin");
+    const element = document.getElementById(data);
+    const cost = parseInt(element.dataset.cost);
+    
+    let target = ev.target;
+    while (!target.classList.contains('slot') && target.id !== 'parts-bin' && target.tagName !== 'BODY') {
+        target = target.parentNode;
+    }
+
+    // 无论拖拽到哪，结束后都移除所有高亮
+    document.getElementById('parts-bin').classList.remove('drag-active');
+    document.querySelectorAll('.slot').forEach(s => s.classList.remove('drag-over'));
+
+    if (target.classList.contains('slot')) {
+        if (target.children.length > 0) return;
+        
+        if (originId === 'parts-bin') {
+            if (currentResources - cost < 0) {
+                flashError();
+                return;
             }
-
-            document.querySelectorAll('.slot').forEach(s => s.classList.remove('drag-over'));
-
-            if (target.classList.contains('slot')) {
-                if (target.children.length > 0) return;
-                
-                if (originId === 'parts-bin') {
-                    if (currentResources - cost < 0) {
-                        flashError();
-                        return;
-                    }
-                }
-                target.appendChild(element);
-            } else if (target.id === 'parts-bin') {
-                target.appendChild(element);
-            }
-
-            recalculateState();
         }
+        target.appendChild(element);
+    } else if (target.id === 'parts-bin') {
+        // 如果目标就是零件箱，直接放回去
+        target.appendChild(element);
+    }
+
+    recalculateState();
+}
+
+        // 当拖拽离开时，移除高亮
+document.addEventListener('dragleave', function(ev) {
+    if(ev.target.id === 'parts-bin') {
+        ev.target.classList.remove('drag-active');
+    }
+    if(ev.target.classList.contains('slot')) {
+        ev.target.classList.remove('drag-over');
+    }
+});
 
         /* --- STATE MANAGEMENT --- */
         function recalculateState() {
@@ -554,82 +716,311 @@ if (parts.length === 0) {
 }
         }
 
-        function flashError() {
-            const counter = document.getElementById('resource-display');
-            counter.classList.add('flash-error');
-            setTimeout(() => counter.classList.remove('flash-error'), 500);
+function flashError() {
+    const counter = document.getElementById('resource-display');
+    const assemblyPanel = document.getElementById('assembly-panel');
+    counter.classList.add('flash-error');
+    assemblyPanel.style.boxShadow = '0 0 15px var(--term-red)';
+    setTimeout(() => {
+        counter.classList.remove('flash-error');
+        assemblyPanel.style.boxShadow = ''; // 移除红光
+    }, 800); // 比原来长一点
+}
+
+/* --- 增强的发布逻辑 --- */
+function publishMod() {
+    const publishButton = document.getElementById('publish-btn');
+    const log = document.getElementById('comments-log');
+    
+    // 【步骤一】更清晰的发布前状态检查
+    if (published) {
+        log.innerHTML = `<div style="color:var(--term-red); border-left:3px solid var(--term-red); padding-left:10px;">
+            > <strong>ERROR:</strong> Mod publication status is LOCKED.<br>
+            > This configuration has already been published to Nexus.<br>
+            > ↻ Please reset the assembly to create a new mod.
+        </div>`;
+        return; // 直接退出函数，不执行后续代码
+    }
+    
+    const slots = document.querySelectorAll('.slot .part-card');
+    if (slots.length === 0) {
+        // 使用更醒目的错误提示
+        log.innerHTML = `<div style="color:var(--term-red); border-left:3px solid var(--term-red); padding-left:10px;">
+            > <strong>ASSEMBLY ERROR:</strong> No components in assembly line.<br>
+            > ↻ Please drag at least one part from the bin to proceed.
+        </div>`;
+        // 添加一个简单的闪烁动画提醒装配区
+        document.getElementById('assembly-panel').style.animation = 'flashRed 1s ease 2';
+        setTimeout(() => { document.getElementById('assembly-panel').style.animation = ''; }, 2000);
+        return;
+    }
+    
+    // 【步骤二】改进按钮状态，明确指示“正在处理”
+    publishButton.innerText = "UPLOADING...";
+    publishButton.style.background = "var(--term-amber)";
+    publishButton.style.cursor = "wait"; // 鼠标变成等待状态
+    
+    // 【步骤三】优化发布过程日志，模拟更真实的步骤
+    log.innerHTML = `
+        <div style="color:var(--term-green);">
+        > [${new Date().toLocaleTimeString([], {hour12: false})}] INITIATE PUBLISH SEQUENCE<br>
+        > Validating assembly configuration... <span style="color:var(--term-amber)">DONE</span><br>
+        > Calculating resource allocation... <span style="color:var(--term-amber)">DONE</span><br>
+        <span style="color:#666;">> ---</span><br>
+        > Compressing mod files (this may take a moment)...<br>
+        </div>
+    `;
+    
+    // 模拟一个短暂的“压缩”延迟
+    setTimeout(() => {
+        log.innerHTML += `<div style="color:var(--term-green);">
+            > Compression: <span style="color:var(--term-amber)">██████████ 100%</span><br>
+            > Establishing Nexus Uplink... <span style="color:var(--term-amber)">CONNECTED</span><br>
+            > Uploading data stream...<br>
+        </div>`;
+        log.scrollTop = log.scrollHeight;
+    }, 800);
+    
+    // 模拟“上传”延迟并最终完成
+    setTimeout(() => {
+        log.innerHTML += `<div style="color:var(--term-green);">
+            > Upload: <span style="color:var(--term-amber)">██████████ 100%</span><br>
+            > Transmitting metadata... <span style="color:var(--term-amber)">DONE</span><br>
+            <span style="color:#666;">> ---</span><br>
+            > <strong style="color:var(--term-green); text-shadow:0 0 5px var(--term-green);">PUBLICATION SUCCESSFUL</strong><br>
+            > Your mod is now live on Nexus.<br>
+            > Initial stats: <span style="color:var(--term-amber)">Downloads: 0 | Endorsements: 0 | Views: 1</span><br>
+            <span style="color:#666;">> ---</span><br>
+            > <em>Community feedback incoming:</em><br><br>
+            </div>`;
+        log.scrollTop = log.scrollHeight;
+        
+        // 【步骤四】最终更新按钮为“已发布”状态
+        published = true;
+        publishButton.innerText = "✓ PUBLISHED";
+        publishButton.style.background = "var(--term-dim)";
+        publishButton.style.color = "#666";
+        publishButton.style.cursor = "not-allowed";
+        publishButton.disabled = true; // 直接禁用按钮
+        publishButton.onclick = null;
+        
+        // 【步骤五】调用生成社区评论的函数
+        generateCommunityFeedback();
+        
+    }, 1600);
+}
+
+/* --- 新增：独立的社区评论生成函数 --- */
+function generateCommunityFeedback() {
+    const log = document.getElementById('comments-log');
+    const commentCount = 4 + Math.floor(Math.random() * 3);
+    const usedIndices = new Set();
+    
+    for (let i = 0; i < commentCount; i++) {
+        let randomIndex;
+        do {
+            randomIndex = Math.floor(Math.random() * commentsData.length);
+        } while (usedIndices.has(randomIndex) && usedIndices.size < commentsData.length);
+        usedIndices.add(randomIndex);
+        const comment = commentsData[randomIndex];
+        
+        const hoursAgo = Math.floor(Math.random() * 24);
+        const minutesAgo = Math.floor(Math.random() * 60);
+        
+        // 为每条评论添加一点延迟，使其依次出现
+        setTimeout(() => {
+            const entry = document.createElement('div');
+            entry.className = 'comment-entry';
+            entry.innerHTML = `
+                <span class="user-name">${comment.user}</span>
+                <span style="color:#666; font-size:0.7em;">(${hoursAgo}h ${minutesAgo}m ago)</span><br>
+                ${comment.text}
+            `;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight; // 自动滚动到最新消息
+        }, i * 1000 + 500); // 每条评论间隔1秒出现
+    }
+    
+    // 最后添加系统消息
+    setTimeout(() => {
+        const systemMsg = document.createElement('div');
+        systemMsg.style.marginTop = '15px';
+        systemMsg.innerHTML = `<div style="color:#666; font-size:0.8em; border-top:1px dotted var(--term-dim); padding-top:10px;">
+            > MOD STATUS: <span style="color:var(--term-green)">ACTIVE</span> | LAST UPDATED: NOW<br>
+            > Remember to endorse content you enjoy! Endorsements help mod authors.
+        </div>`;
+        log.appendChild(systemMsg);
+        log.scrollTop = log.scrollHeight;
+    }, commentCount * 1000 + 1000);
+}
+
+        /* === 新增：全屏和重置功能 - 让按钮真正工作 === */
+
+// 1. 获取按钮和预览屏元素
+const fullscreenBtn = document.getElementById('fullscreen-btn');
+const exitFullscreenBtn = document.getElementById('exit-fullscreen-btn');
+const resetBtn = document.getElementById('reset-btn');
+const previewScreen = document.querySelector('.preview-screen');
+
+// 2. 全屏功能
+fullscreenBtn.addEventListener('click', function() {
+    // 修改为对整个网页（document.documentElement）进行全屏
+    if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen();
+    } else if (document.documentElement.webkitRequestFullscreen) {
+        document.documentElement.webkitRequestFullscreen();
+    } else if (document.documentElement.mozRequestFullScreen) {
+        document.documentElement.mozRequestFullScreen();
+    }
+    // 切换按钮显示
+    fullscreenBtn.style.display = 'none';
+    exitFullscreenBtn.style.display = 'block';
+});
+
+// 3. 退出全屏功能
+exitFullscreenBtn.addEventListener('click', function() {
+    // 这里保持不变，因为退出全屏的API是直接调用 document 的
+    if (document.exitFullscreen) {
+        document.exitFullscreen();
+    } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+    } else if (document.mozCancelFullScreen) {
+        document.mozCancelFullScreen();
+    }
+});
+
+// 4. 监听全屏变化（比如用户按了ESC键）
+function handleFullscreenChange() {
+    // 检查是否还在全屏模式
+    const isFullscreen = document.fullscreenElement || 
+                         document.webkitFullscreenElement || 
+                         document.mozFullScreenElement;
+    
+    if (!isFullscreen) {
+        // 如果退出了全屏，就切换按钮显示
+        fullscreenBtn.style.display = 'block';
+        exitFullscreenBtn.style.display = 'none';
+    }
+}
+
+// 为不同浏览器添加事件监听
+document.addEventListener('fullscreenchange', handleFullscreenChange);
+document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+
+// 5. 重置功能 (REDO按钮) - 直接执行，无需确认
+resetBtn.addEventListener('click', resetAssembly);
+
+// 新增：在日志区显示终端风格的确认提示
+function showTerminalConfirmation() {
+    const log = document.getElementById('comments-log');
+    
+    // 清除可能存在的旧确认信息
+    const oldConfirm = document.getElementById('terminal-confirm');
+    if (oldConfirm) oldConfirm.remove();
+    
+    // 创建并插入一个终端风格的确认消息块
+    const confirmMsg = document.createElement('div');
+    confirmMsg.id = 'terminal-confirm';
+    confirmMsg.style.cssText = `
+        color: var(--term-amber);
+        border-left: 3px solid var(--term-amber);
+        padding: 10px;
+        margin: 10px 0;
+        background: rgba(255, 184, 51, 0.05);
+        font-family: var(--font-main);
+    `;
+    confirmMsg.innerHTML = `
+        > <strong>CONFIRM RESET</strong><br>
+        > Are you sure you want to reset the assembly?<br>
+        > All parts will be returned to the bin.<br>
+        > <span style="color:var(--term-green)">[Y]</span>es / <span style="color:var(--term-red)">[N]</span>o
+    `;
+    
+    // 插入到日志区顶部
+    log.insertBefore(confirmMsg, log.firstChild);
+    log.scrollTop = 0; // 滚动到顶部看确认信息
+    
+    // 设置一个一次性键盘事件监听器来处理 Y/N 按键
+    function handleKeyPress(e) {
+        // 只处理 Y 或 N 键（不区分大小写）
+        if (e.key.toLowerCase() === 'y') {
+            // 用户确认，执行重置
+            resetAssembly();
+            // 移除确认消息和键盘监听
+            confirmMsg.remove();
+            document.removeEventListener('keydown', handleKeyPress);
+            // 可选：在日志中添加一条“已确认”的记录
+            const doneMsg = document.createElement('div');
+            doneMsg.innerHTML = `<span style="color:#666">> Reset confirmed. Executing...</span>`;
+            log.insertBefore(doneMsg, log.firstChild);
+        } else if (e.key.toLowerCase() === 'n') {
+            // 用户取消
+            confirmMsg.remove();
+            document.removeEventListener('keydown', handleKeyPress);
+            // 可选：在日志中添加一条“已取消”的记录
+            const cancelMsg = document.createElement('div');
+            cancelMsg.innerHTML = `<span style="color:#666">> Reset operation cancelled.</span>`;
+            log.insertBefore(cancelMsg, log.firstChild);
         }
-
-        /* --- 增强的发布逻辑 --- */
-        function publishMod() {
-            if (published) {
-                const log = document.getElementById('comments-log');
-                log.innerHTML = `<div style="color:var(--term-red)">> ERROR: Mod already published. Create a new one.</div>`;
-                return;
-            }
-
-            const log = document.getElementById('comments-log');
-            const slots = document.querySelectorAll('.slot .part-card');
-            
-            if(slots.length === 0) {
-                log.innerHTML = `<div class="comment-entry" style="color:var(--term-red)">> ERROR: Cannot publish empty mod. Add parts.</div>`;
-                return;
-            }
-
-            // 清空日志并显示上传状态
-            log.innerHTML = `<div style="color:var(--term-green)">
-                > INITIATING UPLOAD TO NEXUS SERVERS...<br>
-                > COMPRESSING FILES...<br>
-                > UPLOADING: ██████████ 100%<br>
-                > MOD PUBLISHED SUCCESSFULLY.<br>
-                > DOWNLOADS: 0 | ENDORSEMENTS: 0<br><br>
-                > COMMUNITY FEEDBACK:</div>`;
-            
-            published = true;
-            document.getElementById('publish-btn').innerText = "PUBLISHED";
-            document.getElementById('publish-btn').style.background = "var(--term-dim)";
-            document.getElementById('publish-btn').style.cursor = "not-allowed";
-            document.getElementById('publish-btn').onclick = null;
-
-            // 随机选择4-6条评论显示
-            const commentCount = 4 + Math.floor(Math.random() * 3); // 4-6条评论
-            const usedIndices = new Set();
-            
-            for(let i = 0; i < commentCount; i++) {
-                let randomIndex;
-                do {
-                    randomIndex = Math.floor(Math.random() * commentsData.length);
-                } while(usedIndices.has(randomIndex) && usedIndices.size < commentsData.length);
-                
-                usedIndices.add(randomIndex);
-                const comment = commentsData[randomIndex];
-                
-                // 随机时间戳
-                const hoursAgo = Math.floor(Math.random() * 24);
-                const minutesAgo = Math.floor(Math.random() * 60);
-                
-                setTimeout(() => {
-                    const entry = document.createElement('div');
-                    entry.className = 'comment-entry';
-                    entry.innerHTML = `
-                        <span class="user-name">${comment.user}</span> 
-                        <span style="color:#666; font-size:0.7em;">(${hoursAgo}h ${minutesAgo}m ago)</span><br>
-                        ${comment.text}
-                    `;
-                    log.appendChild(entry);
-                    log.scrollTop = log.scrollHeight;
-                }, i * 800 + 500);
-            }
-
-            // 最后添加一条系统消息
-            setTimeout(() => {
-                const systemMsg = document.createElement('div');
-                systemMsg.innerHTML = `<br><div style="color:#666; font-size:0.8em; border-top:1px dotted var(--term-dim); padding-top:10px;">
-                    > MOD STATUS: ACTIVE | LAST UPDATED: NOW<br>
-                    > REMEMBER TO ENDORSE IF YOU ENJOY THE CONTENT!</div>`;
-                log.appendChild(systemMsg);
-            }, commentCount * 800 + 1000);
+        // 按其他键不做反应
+    }
+    
+    // 添加键盘事件监听
+    document.addEventListener('keydown', handleKeyPress);
+    
+    // 可选：设置一个超时（比如15秒后），自动清理未处理的确认请求
+    setTimeout(() => {
+        if (document.getElementById('terminal-confirm')) {
+            document.getElementById('terminal-confirm').remove();
+            document.removeEventListener('keydown', handleKeyPress);
+            const timeoutMsg = document.createElement('div');
+            timeoutMsg.innerHTML = `<span style="color:#666">> Reset confirmation timed out.</span>`;
+            log.insertBefore(timeoutMsg, log.firstChild);
         }
+    }, 15000); // 15秒后超时
+}
+
+// 6. 重置装配的具体函数
+function resetAssembly() {
+    // 6.1 清空所有装配槽，把零件移回零件箱
+    const slots = document.querySelectorAll('.slot');
+    const partsBin = document.getElementById('parts-bin');
+    
+    slots.forEach(slot => {
+        if (slot.children.length > 0) {
+            const partCard = slot.children[0];
+            partsBin.appendChild(partCard); // 移回去
+        }
+    });
+    
+    // 6.2 重置核心状态
+    currentResources = 5; // 资源回满
+    published = false;    // 允许重新发布
+    
+    // 6.3 重置发布按钮状态
+    const publishButton = document.getElementById('publish-btn');
+    publishButton.innerText = "Publish to Nexus";
+    publishButton.style.background = "var(--term-green)";
+    publishButton.style.color = "#000";
+    publishButton.style.cursor = "pointer";
+    publishButton.disabled = false;
+    publishButton.onclick = publishMod; // 重新绑定点击事件
+    
+    // 6.4 更新界面
+    updateUI();
+    
+    // 6.5 在右侧日志中添加一条重置提示
+    const log = document.getElementById('comments-log');
+    const resetMsg = document.createElement('div');
+    resetMsg.className = 'comment-entry';
+    resetMsg.innerHTML = `
+        <span class="user-name">SYSTEM</span> 
+        <span style="color:#666; font-size:0.7em;">(刚刚)</span><br>
+        > The assembly line has been reset. Resource points have been restored. You may begin assembling new modules.
+    `;
+    log.insertBefore(resetMsg, log.firstChild); // 加到日志顶部
+}
 
     </script>
 </body>
