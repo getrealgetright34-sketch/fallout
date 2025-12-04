@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEXUS-LINK // MOD WORKBENCH</title>
+    <style>
+        /* --- CORE RETRO AESTHETICS --- */
+        :root {
+            --bg-color: #050a05;
+            --term-green: #33ff33;
+            --term-amber: #ffb833;
+            --term-dim: #1a4d1a;
+            --term-red: #ff3333;
+            --scanline-color: rgba(0, 0, 0, 0.5);
+            --font-main: 'Courier New', Courier, monospace;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--term-green);
+            font-family: var(--font-main);
+            margin: 0;
+            padding: 20px;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+            user-select: none; /* Prevent text selection during drag */
+        }
+
+        /* Scanline Overlay */
+        .crt-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        /* --- LAYOUT GRID --- */
+        .workbench-grid {
+            display: grid;
+            grid-template-columns: 250px 1fr 250px; /* Left, Center, Right */
+            grid-template-rows: 1fr 200px; /* Main area, Bottom Assembly */
+            gap: 15px;
+            height: 100%;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* --- PANEL STYLING --- */
+        .panel {
+            border: 2px solid var(--term-dim);
+            background: rgba(0, 20, 0, 0.3);
+            padding: 15px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 10px rgba(51, 255, 51, 0.1);
+        }
+
+        .panel-header {
+            background-color: var(--term-dim);
+            color: var(--term-green);
+            padding: 5px 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: -15px -15px 15px -15px; /* Bleed to edges */
+            border-bottom: 2px solid var(--term-green);
+        }
+
+        /* --- LEFT: PARTS BIN --- */
+        #parts-bin {
+            grid-column: 1;
+            grid-row: 1;
+            overflow-y: auto;
+        }
+
+        .part-card {
+            background: #000;
+            border: 1px dashed var(--term-green);
+            padding: 10px;
+            margin-bottom: 10px;
+            cursor: grab;
+            transition: all 0.2s;
+        }
+
+        .part-card:hover {
+            border-style: solid;
+            box-shadow: 0 0 8px var(--term-green);
+            background: #0f1f0f;
+        }
+
+        .part-card:active {
+            cursor: grabbing;
+        }
+
+        .card-title { font-weight: bold; font-size: 0.9em; }
+        .card-meta { 
+            font-size: 0.75em; 
+            display: flex; 
+            justify-content: space-between; 
+            margin-top: 5px; 
+            color: var(--term-amber);
+        }
+
+        /* --- CENTER: PREVIEW --- */
+        #preview-panel {
+            grid-column: 2;
+            grid-row: 1;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .preview-screen {
+            width: 90%;
+            height: 70%;
+            border: 3px solid var(--term-green); /* 加粗边框更醒目 */
+            margin-bottom: 20px;
+            position: relative;
+            background-color: #000;
+            background-size: cover; /* 关键：让背景图覆盖整个区域 */
+            background-position: center; /* 关键：居中显示 */
+            background-repeat: no-repeat; /* 关键：不重复 */
+            box-shadow: 0 0 20px rgba(51, 255, 51, 0.4); /* 增强发光效果 */
+            overflow: hidden;
+        }
+
+        .mod-icon {
+            display: flex; /* 使用弹性布局 */
+            align-items: center; /* 垂直居中 */
+            justify-content: center; /* 水平居中 */
+            width: 100%; /* 宽度100%填满父容器 */
+            height: 100%; /* 高度100%填满父容器 */
+            overflow: hidden; /* 防止图片溢出 */
+        }
+
+        .preview-image {
+            width: 100%; /* 宽度100%填满容器 */
+            height: 100%; /* 高度100%填满容器 */
+            object-fit: contain; /* 保持比例并完整显示，可能会有裁剪 */
+            /* object-fit: contain; */ /* 如果想完整显示图片（不裁剪），用这个 */
+            border: 2px solid var(--term-dim);
+            image-rendering: crisp-edges; /* 更清晰的像素边缘 */
+            box-shadow: 0 0 20px rgba(51, 255, 51, 0.4); /* 更强的发光效果 */
+            display: block; /* 确保图片是块级元素 */
+        }
+        
+        .preview-content {
+            position: absolute; /* 绝对定位，脱离文档流 */
+            top: 10px; /* 距离顶部10像素 */
+            left: 10px; /* 距离左边10像素 */
+            right: 10px; /* 距离右边10像素 */
+            z-index: 10; /* 确保文字在图片上方 */
+            background-color: rgba(0, 0, 0, 0.7); /* 半透明黑色背景 */
+            padding: 15px;
+            border: 1px solid var(--term-green);
+            border-radius: 5px;
+        }
+
+        .mod-title {
+            color: var(--term-green);
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 0 0 8px rgba(51, 255, 51, 0.8);
+        }
+
+        .mod-desc {
+            color: var(--term-amber);
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+
+        #publish-btn {
+            background: var(--term-green);
+            color: #000;
+            border: none;
+            padding: 15px;
+            font-family: var(--font-main);
+            font-weight: bold;
+            font-size: 1.1em;
+            cursor: pointer;
+            width: 100%;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+            transition: 0.2s;
+        }
+
+        #publish-btn:hover {
+            background: var(--term-amber);
+            box-shadow: 0 0 15px var(--term-amber);
+        }
+
+        #publish-btn:active { transform: scale(0.98); }
+
+        #comments-log {
+            flex-grow: 1;
+            border-top: 1px dotted var(--term-dim);
+            padding-top: 10px;
+            overflow-y: auto;
+            font-size: 0.8em;
+        }
+
+        .comment-entry {
+            margin-bottom: 10px;
+            border-left: 2px solid var(--term-dim);
+            padding-left: 8px;
+        }
+        .user-name { color: var(--term-amber); font-weight: bold; }
+
+        /* --- BOTTOM: ASSEMBLY --- */
+        #assembly-panel {
+            grid-column: 1 / span 3;
+            grid-row: 2;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .resource-counter {
+            text-align: right;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+            color: var(--term-amber);
+        }
+
+        .assembly-slots-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            height: 100%;
+        }
+
+        .slot {
+            width: 150px;
+            height: 110px;
+            border: 2px dashed var(--term-dim);
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .slot::after {
+            content: "EMPTY SLOT";
+            position: absolute;
+            color: var(--term-dim);
+            font-size: 0.8em;
+            z-index: 0;
+        }
+
+        .slot .part-card {
+            width: 130px;
+            height: 80px;
+            margin: 0;
+            z-index: 1;
+            background: #000;
+        }
+
+        /* Drag Over Highlight */
+        .slot.drag-over {
+            border-color: var(--term-green);
+            background: rgba(51, 255, 51, 0.1);
+        }
+
+        .flash-error {
+            animation: flashRed 0.5s ease-in-out;
+        }
+
+        @keyframes flashRed {
+            0%, 100% { color: var(--term-amber); }
+            50% { color: var(--term-red); text-shadow: 0 0 10px var(--term-red); }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="crt-overlay"></div>
+
+    <div class="workbench-grid">
+        
+        <!-- LEFT PANEL: PARTS BIN -->
+        <div class="panel" id="parts-bin-panel">
+            <div class="panel-header">Parts Bin</div>
+            <div id="parts-bin" ondrop="drop(event)" ondragover="allowDrop(event)">
+                <!-- Generated by JS -->
+            </div>
+        </div>
+
+        <!-- CENTER PANEL: PREVIEW -->
+        <div class="panel" id="preview-panel">
+            <div class="panel-header">Simulated Preview</div>
+            <div class="preview-screen">
+                <!-- 图片容器 - 放在最底层 -->
+                <div class="mod-icon" id="preview-icon">
+                    <!-- 图片会通过JS动态插入到这里 -->
+                </div>
+
+                <!-- 文字内容 - 放在上层 -->
+                <div class="preview-content">
+                    <div class="mod-title" id="preview-title">UNTITLED MOD</div>
+                    <div class="mod-desc" id="preview-desc">Add components to the assembly area to compile a preview.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL: COMMUNITY -->
+        <div class="panel" id="community-hub">
+            <div class="panel-header">Nexus Uplink</div>
+            <button id="publish-btn" onclick="publishMod()">Publish to Nexus</button>
+            <div id="comments-log">
+                <div style="color: #666;">// WAITING FOR UPLOAD...</div>
+            </div>
+        </div>
+
+        <!-- BOTTOM PANEL: ASSEMBLY -->
+        <div class="panel" id="assembly-panel">
+            <div class="panel-header">Assembly Line</div>
+            <div class="resource-counter" id="resource-display">RESOURCE POINTS: 5/5</div>
+            <div class="assembly-slots-container">
+                <div class="slot" ondrop="drop(event)" ondragover="allowDrop(event)" id="slot-1"></div>
+                <div class="slot" ondrop="drop(event)" ondragover="allowDrop(event)" id="slot-2"></div>
+                <div class="slot" ondrop="drop(event)" ondragover="allowDrop(event)" id="slot-3"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* --- GAME DATA --- */
+        const partsData = [
+            { id: 'p1', name: '4K Texture Pack', cost: 2, tag: 'Visual', desc: "Makes puddles look radioactive." },
+            { id: 'p2', name: 'Smart AI Core', cost: 2, tag: 'Gameplay', desc: "Raiders now use actual tactics." },
+            { id: 'p3', name: 'Cinematic Soundtrack', cost: 1, tag: 'Audio', desc: "Walking through ruins feels epic." },
+            { id: 'p4', name: 'God Rays Shader', cost: 1, tag: 'Visual', desc: "Blinding sun rays through ruins." },
+            { id: 'p5', name: 'Hardcore Survival', cost: 3, tag: 'Gameplay', desc: "Radiation actually matters now." },
+            { id: 'p6', name: 'Radio New Vegas', cost: 1, tag: 'Audio', desc: "Adds 50+ retro songs to Pip-Boy." }
+        ];
+
+        // 扩展的评论库：更多样化、更有趣
+        const commentsData = [
+            { user: "VaultDweller_101", text: "This mod single-handedly saved my playthrough. Endorsed!" },
+            { user: "LorePurist42", text: "Nice work, but the green tint isn't canon for this area." },
+            { user: "ModJunkie", text: "Any chance for a F4SE version? Scripts feel lightweight." },
+            { user: "ToasterPCGamer", text: "Went from 60 to 15 FPS. Worth it for those textures!" },
+            { user: "Nexus_Helper_Bot", text: "Remember to clean your save before installing!" },
+            { user: "SettlerJoe", text: "Works with Sim Settlements 2? Can't get it to load..." },
+            { user: "Pip-BoyCollector", text: "The UI changes are *chef's kiss*. Finally readable!" },
+            { user: "BrotherhoodScribe", text: "Ad Victoriam! This mod serves the Brotherhood well." },
+            { user: "MinutemenGeneral", text: "Another settlement needs your help... and this mod!" },
+            { user: "RailroadAgent", text: "Hidden feature found: a synth reference in the code. Clever!" },
+            { user: "InstituteScientist", text: "The technical implementation is... advanced. Impressive." },
+            { user: "MoleratLover99", text: "Can you add a giant molerat boss? Asking for a friend." },
+            { user: "WastelandChef", text: "Now if only someone modded in cooking those radroaches..." },
+            { user: "PowerArmorFan", text: "T-60 feels clunkier with this. Intentional or bug?" },
+            { user: "DogmeatSimp", text: "DOGMEAT RETEXTURE WHEN?! He needs a bandana." },
+            { user: "NewVegasRefugee", text: "Brings back memories of the Mojave. Well done." },
+            { user: "DialogueSkipUser", text: "Great, but now Preston won't shut up about it." },
+            { user: "ModAuthor_Tired", text: "As a fellow creator, I respect the clean scripting." },
+            { user: "FirstTimeModder", text: "How do I install this? The README is 10 pages long!" },
+            { user: "AchievementHunter", text: "Does this disable achievements? On a fresh run." },
+            { user: "VRGuy", text: "Tried in Fallout 4 VR. My headset exploded (not really)." },
+            { user: "LeviathanAxe", text: "DOWNLOADING NOW. MY BODY IS READY." }
+        ];
+
+        // 《辐射》主题图片智能匹配规则
+        const imageRules = [
+            // 规则1：三个标签 -> 终极改造
+            { tags: ['Visual', 'Gameplay', 'Audio'], image: 'https://staticdelivery.nexusmods.com/mods/1151/images/87983/87983-1762273475-216944672.png' },
+            
+            // 规则2：两个特定标签的组合 -> 混合类型
+            { tags: ['Visual', 'Gameplay'], image: 'https://staticdelivery.nexusmods.com/mods/1151/images/87983/87983-1762273363-1800887534.png' },
+            { tags: ['Visual', 'Audio'], image: 'https://staticdelivery.nexusmods.com/mods/1151/images/9048-0-1481700060.gif' },
+            { tags: ['Gameplay', 'Audio'], image: 'https://staticdelivery.nexusmods.com/mods/1151/images/9048-3-1478385814.gif' },
+            
+            // 规则3：单个标签 -> 基础类型
+            { tags: ['Visual'], image: 'https://staticdelivery.nexusmods.com/mods/1151/images/55817/55817-1639155045-23612675.jpeg' },
+            { tags: ['Gameplay'], image: 'https://staticdelivery.nexusmods.com/mods/1151/images/27479-0-1508690249.gif' },
+            { tags: ['Audio'], image: 'https://staticdelivery.nexusmods.com/mods/1151/images/9048-3-1458633384.gif' }
+        ];
+        // 默认图片
+        const defaultImage = 'https://upload.wikimedia.org/wikipedia/commons/e/ee/Fallout_television_series_logo.svg';
+        // 智能图片匹配函数
+        function findImageForTags(tagArray) {
+            const sortedTags = [...tagArray].sort();
+            
+            // 1. 尝试匹配精确组合（适用于所有规则）
+            for (let rule of imageRules) {
+                if (JSON.stringify(sortedTags) === JSON.stringify([...rule.tags].sort())) {
+                    return rule.image;
+                }
+            }
+            
+            // 2. 如果未精确匹配，降级匹配：尝试用当前组合去匹配规则中的子集（此逻辑可根据需要开启）
+            // for (let rule of imageRules) {
+            //     // 检查当前标签是否包含规则中的所有标签（例如，['Visual','Gameplay'] 是 ['Visual','Gameplay','Audio'] 的子集）
+            //     if (rule.tags.every(tag => sortedTags.includes(tag))) {
+            //         return rule.image;
+            //     }
+            // }
+            
+            // 3. 都没有匹配上，使用默认图片
+            return defaultImage;
+        }
+
+        let currentResources = 5;
+        const maxResources = 5;
+        let published = false; // 防止重复发布
+
+        /* --- INITIALIZATION --- */
+        window.onload = function() {
+            const bin = document.getElementById('parts-bin');
+            partsData.forEach(part => {
+                const card = document.createElement('div');
+                card.className = 'part-card';
+                card.draggable = true;
+                card.id = part.id;
+                card.dataset.cost = part.cost;
+                card.dataset.tag = part.tag;
+                
+                card.innerHTML = `
+                    <div class="card-title">${part.name}</div>
+                    <div class="card-meta">
+                        <span>[${part.tag}]</span>
+                        <span>COST: ${part.cost}</span>
+                    </div>
+                `;
+                
+                card.addEventListener('dragstart', drag);
+                bin.appendChild(card);
+            });
+            updateUI();
+        };
+
+        /* --- DRAG AND DROP LOGIC --- */
+        function allowDrop(ev) {
+            ev.preventDefault();
+            if(ev.target.classList.contains('slot')) {
+                ev.target.classList.add('drag-over');
+            }
+        }
+
+        document.addEventListener('dragleave', (ev) => {
+            if(ev.target.classList.contains('slot')) {
+                ev.target.classList.remove('drag-over');
+            }
+        });
+
+        function drag(ev) {
+            ev.dataTransfer.setData("text", ev.target.id);
+            ev.dataTransfer.setData("origin", ev.target.parentNode.id);
+        }
+
+        function drop(ev) {
+            ev.preventDefault();
+            const data = ev.dataTransfer.getData("text");
+            const originId = ev.dataTransfer.getData("origin");
+            const element = document.getElementById(data);
+            const cost = parseInt(element.dataset.cost);
+            
+            let target = ev.target;
+            while (!target.classList.contains('slot') && target.id !== 'parts-bin' && target.tagName !== 'BODY') {
+                target = target.parentNode;
+            }
+
+            document.querySelectorAll('.slot').forEach(s => s.classList.remove('drag-over'));
+
+            if (target.classList.contains('slot')) {
+                if (target.children.length > 0) return;
+                
+                if (originId === 'parts-bin') {
+                    if (currentResources - cost < 0) {
+                        flashError();
+                        return;
+                    }
+                }
+                target.appendChild(element);
+            } else if (target.id === 'parts-bin') {
+                target.appendChild(element);
+            }
+
+            recalculateState();
+        }
+
+        /* --- STATE MANAGEMENT --- */
+        function recalculateState() {
+            const slots = document.querySelectorAll('.slot');
+            let usedResources = 0;
+            let activeTags = [];
+            let activeParts = [];
+
+            slots.forEach(slot => {
+                if(slot.children.length > 0) {
+                    const card = slot.children[0];
+                    usedResources += parseInt(card.dataset.cost);
+                    activeTags.push(card.dataset.tag);
+                    activeParts.push(partsData.find(p => p.id === card.id));
+                }
+            });
+
+            currentResources = maxResources - usedResources;
+            updateUI(activeParts, activeTags);
+        }
+
+        function updateUI(parts = [], tags = []) {
+            // 更新资源显示
+            const counter = document.getElementById('resource-display');
+            counter.innerText = `RESOURCE POINTS: ${currentResources}/${maxResources}`;
+            counter.style.color = currentResources === 0 ? 'var(--term-red)' : 'var(--term-amber)';
+
+            // 更新预览
+            const pTitle = document.getElementById('preview-title');
+            const pDesc = document.getElementById('preview-desc');
+            const pIcon = document.getElementById('preview-icon');
+
+if (parts.length === 0) {
+    pTitle.innerText = "UNTITLED MOD";
+    pDesc.innerText = "Add components to the assembly area to compile a preview.";
+    // 设置默认图片或清空
+    pIcon.innerHTML = '<img src="' + defaultImage + '" class="preview-image">';
+} else {
+    // 生成标题
+    let prefix = "Vanilla";
+    if(tags.includes("Visual")) prefix = "Beautiful";
+    if(tags.includes("Gameplay")) prefix = "Immersive";
+    if(tags.includes("Audio")) prefix = "Cinematic";
+    if(tags.includes("Gameplay") && tags.includes("Visual")) prefix = "Overhaul";
+    if(tags.includes("Gameplay") && tags.includes("Audio")) prefix = "Intense";
+    if(tags.includes("Visual") && tags.includes("Audio")) prefix = "Atmospheric";
+    if(tags.includes("Visual") && tags.includes("Gameplay") && tags.includes("Audio")) prefix = "Definitive";
+    
+    pTitle.innerText = `${prefix} Wasteland`;
+    
+    // 生成描述
+    pDesc.innerText = parts.map(p => p.desc).join(" + ");
+
+    // 图片逻辑：智能匹配图片
+    let imageUrl = findImageForTags(tags);
+    
+    // 使用新的CSS类，图片会填满整个容器
+    pIcon.innerHTML = '<img src="' + imageUrl + '" class="preview-image">';
+}
+        }
+
+        function flashError() {
+            const counter = document.getElementById('resource-display');
+            counter.classList.add('flash-error');
+            setTimeout(() => counter.classList.remove('flash-error'), 500);
+        }
+
+        /* --- 增强的发布逻辑 --- */
+        function publishMod() {
+            if (published) {
+                const log = document.getElementById('comments-log');
+                log.innerHTML = `<div style="color:var(--term-red)">> ERROR: Mod already published. Create a new one.</div>`;
+                return;
+            }
+
+            const log = document.getElementById('comments-log');
+            const slots = document.querySelectorAll('.slot .part-card');
+            
+            if(slots.length === 0) {
+                log.innerHTML = `<div class="comment-entry" style="color:var(--term-red)">> ERROR: Cannot publish empty mod. Add parts.</div>`;
+                return;
+            }
+
+            // 清空日志并显示上传状态
+            log.innerHTML = `<div style="color:var(--term-green)">
+                > INITIATING UPLOAD TO NEXUS SERVERS...<br>
+                > COMPRESSING FILES...<br>
+                > UPLOADING: ██████████ 100%<br>
+                > MOD PUBLISHED SUCCESSFULLY.<br>
+                > DOWNLOADS: 0 | ENDORSEMENTS: 0<br><br>
+                > COMMUNITY FEEDBACK:</div>`;
+            
+            published = true;
+            document.getElementById('publish-btn').innerText = "PUBLISHED";
+            document.getElementById('publish-btn').style.background = "var(--term-dim)";
+            document.getElementById('publish-btn').style.cursor = "not-allowed";
+            document.getElementById('publish-btn').onclick = null;
+
+            // 随机选择4-6条评论显示
+            const commentCount = 4 + Math.floor(Math.random() * 3); // 4-6条评论
+            const usedIndices = new Set();
+            
+            for(let i = 0; i < commentCount; i++) {
+                let randomIndex;
+                do {
+                    randomIndex = Math.floor(Math.random() * commentsData.length);
+                } while(usedIndices.has(randomIndex) && usedIndices.size < commentsData.length);
+                
+                usedIndices.add(randomIndex);
+                const comment = commentsData[randomIndex];
+                
+                // 随机时间戳
+                const hoursAgo = Math.floor(Math.random() * 24);
+                const minutesAgo = Math.floor(Math.random() * 60);
+                
+                setTimeout(() => {
+                    const entry = document.createElement('div');
+                    entry.className = 'comment-entry';
+                    entry.innerHTML = `
+                        <span class="user-name">${comment.user}</span> 
+                        <span style="color:#666; font-size:0.7em;">(${hoursAgo}h ${minutesAgo}m ago)</span><br>
+                        ${comment.text}
+                    `;
+                    log.appendChild(entry);
+                    log.scrollTop = log.scrollHeight;
+                }, i * 800 + 500);
+            }
+
+            // 最后添加一条系统消息
+            setTimeout(() => {
+                const systemMsg = document.createElement('div');
+                systemMsg.innerHTML = `<br><div style="color:#666; font-size:0.8em; border-top:1px dotted var(--term-dim); padding-top:10px;">
+                    > MOD STATUS: ACTIVE | LAST UPDATED: NOW<br>
+                    > REMEMBER TO ENDORSE IF YOU ENJOY THE CONTENT!</div>`;
+                log.appendChild(systemMsg);
+            }, commentCount * 800 + 1000);
+        }
+
+    </script>
+</body>
+</html>
