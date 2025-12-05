@@ -450,6 +450,55 @@
     </div>
 
     <script>
+        // PIP-Boy风格音效
+const audioFiles = {
+    click: 'https://assets.mixkit.co/sfx/preview/mixkit-select-click-1109.mp3',
+    drag: 'https://assets.mixkit.co/sfx/preview/mixkit-plastic-bubble-click-1124.mp3',
+    success: 'https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.mp3',
+    error: 'https://assets.mixkit.co/sfx/preview/mixkit-warning-alarm-buzzer-1551.mp3',
+    uiBeep: 'https://assets.mixkit.co/sfx/preview/mixkit-retro-game-emergency-alarm-1000.mp3'
+};
+
+// 创建音频对象
+const clickSound = new Audio(audioFiles.click);
+const dragSound = new Audio(audioFiles.drag);
+const successSound = new Audio(audioFiles.success);
+const errorSound = new Audio(audioFiles.error);
+const uiBeepSound = new Audio(audioFiles.uiBeep);
+
+// 设置音量（0-1之间）
+clickSound.volume = 0.4;
+dragSound.volume = 0.3;
+successSound.volume = 0.5;
+errorSound.volume = 0.4;
+uiBeepSound.volume = 0.3;
+
+// 播放音效的辅助函数
+function playClickSound() {
+    clickSound.currentTime = 0; // 重置播放位置
+    clickSound.play().catch(e => console.log("音效播放失败（用户可能还未交互）"));
+}
+
+function playDragSound() {
+    dragSound.currentTime = 0;
+    dragSound.play().catch(e => console.log("音效播放失败"));
+}
+
+function playSuccessSound() {
+    successSound.currentTime = 0;
+    successSound.play().catch(e => console.log("音效播放失败"));
+}
+
+function playErrorSound() {
+    errorSound.currentTime = 0;
+    errorSound.play().catch(e => console.log("音效播放失败"));
+}
+
+function playUIBeep() {
+    uiBeepSound.currentTime = 0;
+    uiBeepSound.play().catch(e => console.log("音效播放失败"));
+}
+
         /* --- GAME DATA --- */
         const partsData = [
             { id: 'p1', name: '4K Texture Pack', cost: 2, tag: 'Visual', desc: "Makes puddles look radioactive." },
@@ -493,8 +542,8 @@ const imageRules = [
         tags: ['Visual', 'Gameplay', 'Audio'], 
         images: [
             'https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExNDZvMTRkNXV5NDVoNWdnd3gyM2VxcngwMmhmZHJ6aHNxbWM0bDEzdiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/mBv1pDl2EvnviBAj5S/giphy.gif',
-            'https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExOXl1dTBqOGNlZWZ5NWoxeGx4bHZ5cnR3Z3l6aDl2a2lqc2JlcXdxdCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/l0MYC0LajbaPoEADu/giphy.gif',
-            'https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExeGxmbHRqNGh3OW5scnE2anZ2OHJodGw1a3BmZ2N4bTZ6YjJ6cjBiNSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3o7TKsQ8gTp3WqXqjq/giphy.gif',
+            'https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExazJuZzR6cWxqbW4yOGdxNTRwb283ZjU5NmpjNmxtdmFoa3Z6eHhyNyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/pHYfmV1OLvOjdGYwzj/giphy.gif',
+            'https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExMHNjZTZpZmI0Z2xwdWhhYjhhdGhxYzlhajVieDZzY2p5dGdpZWZxYiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/5BWVkL3XncabaZFSJG/giphy.gif',
             'https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExcmF5YXc0b2JrZmNhNGh4dmtlNWRmam12amJwYzJ5ODBtdmY4ZDJweSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/DAFTzKpcBNRVgADMyX/giphy.gif'
         ] 
     },
@@ -504,7 +553,7 @@ const imageRules = [
         tags: ['Visual', 'Gameplay'], 
         images: [
             'https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExOTdtY3g4NnNvaXl3eGJjOWprN294azUwZGw3aXpybTl0dWV4ZGRudCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/UrsNCpba5y3NBf54G9/giphy.gif',
-            'https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExZmV4OWVmdzhhbXEydGJ2dGh6dG1pZ2EwNHJ4MjRqdTN1N3M1ZyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3o7TKsQ8gTp3WqXqjq/giphy.gif',
+            'https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExZXh5NHE4eTUwd2U3cDVyMnY5bnQ3d2R4cjBzcmhzMWpmcWJkeGpxcCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/6CBh45sInkBxYyKD9I/giphy.gif',
             'https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExaWVlOW9zbzRzem91bndqb3ZpbWJ1MHA4ZTl4dXVrZ2I1dmNnN2U2cSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/s2Hu61Z9CujrPoIVun/giphy.gif'
         ] 
     },
@@ -523,7 +572,7 @@ const imageRules = [
         tags: ['Visual'], 
         images: [
             'https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExczdlMXZ4ZnpqeHZnM21yZWV0b2VraWU2ZTR0cjdqejRnamZodTc1YiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/35NEOu8KD38MPeggGA/giphy.gif',
-            'https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExeGM5aDl0M2JmZ2Jqem8zZ2Z6eG5hbWY5a2VhZzN6ZzZ6ZzZ6ZzZ6ZyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/l0MYC0LajbaPoEADu/giphy.gif'
+            'https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExajVtNWhhNjg3NTVna2E0ZWoxczJwYnVibGVxYmhmZHMwbGU3b3FmbCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/aK2qbB8QuBnZewOWyP/giphy.gif'
         ]
     },
     { tags: ['Gameplay'], image: 'https://staticdelivery.nexusmods.com/mods/1151/images/27479-0-1508690249.gif' },
@@ -864,6 +913,7 @@ const previewScreen = document.querySelector('.preview-screen');
 
 // 2. 全屏功能
 fullscreenBtn.addEventListener('click', function() {
+    playUIBeep(); // 添加音效
     // 修改为对整个网页（document.documentElement）进行全屏
     if (document.documentElement.requestFullscreen) {
         document.documentElement.requestFullscreen();
@@ -879,6 +929,7 @@ fullscreenBtn.addEventListener('click', function() {
 
 // 3. 退出全屏功能
 exitFullscreenBtn.addEventListener('click', function() {
+    playUIBeep(); // 添加音效
     // 这里保持不变，因为退出全屏的API是直接调用 document 的
     if (document.exitFullscreen) {
         document.exitFullscreen();
@@ -1007,19 +1058,34 @@ function resetAssembly() {
     publishButton.disabled = false;
     publishButton.onclick = publishMod; // 重新绑定点击事件
     
-    // 6.4 更新界面
+    // ... 6.4 更新界面
     updateUI();
     
-    // 6.5 在右侧日志中添加一条重置提示
+    // 6.5 在右侧日志中添加或替换重置提示
     const log = document.getElementById('comments-log');
+    // 移除可能存在的旧“SYSTEM”重置消息
+    const oldSystemMessages = log.querySelectorAll('.comment-entry:has(.user-name:contains("SYSTEM"))');
+    oldSystemMessages.forEach(msg => {
+        // 检查消息内容是否与重置相关，避免误删评论
+        if (msg.textContent.includes('assembly line has been reset') || msg.textContent.includes('资源点已恢复')) {
+            msg.remove();
+        }
+    });
+
     const resetMsg = document.createElement('div');
     resetMsg.className = 'comment-entry';
     resetMsg.innerHTML = `
         <span class="user-name">SYSTEM</span> 
-        <span style="color:#666; font-size:0.7em;">(刚刚)</span><br>
-        > The assembly line has been reset. Resource points have been restored. You may begin assembling new modules.
+        <span style="color:#666; font-size:0.7em;">(${new Date().toLocaleTimeString([], {hour12: false})})</span><br>
+        > Assembly line reset. Resource pool restored to 5/5.
     `;
-    log.insertBefore(resetMsg, log.firstChild); // 加到日志顶部
+    // 加到日志顶部，在“等待上传”提示之后
+    const waitingMsg = log.querySelector('div[style*="WAITING FOR UPLOAD"]');
+    if (waitingMsg) {
+        log.insertBefore(resetMsg, waitingMsg.nextSibling);
+    } else {
+        log.insertBefore(resetMsg, log.firstChild);
+    }
 }
 
     </script>
